@@ -12,6 +12,10 @@ fi
 # 确保数据目录存在
 mkdir -p /config/chromium-data
 
+# 设置 XDG_RUNTIME_DIR
+export XDG_RUNTIME_DIR=/tmp/runtime-abc
+mkdir -p "$XDG_RUNTIME_DIR"
+
 # 等待 X server 就绪
 echo "⏳ 等待桌面环境就绪..."
 until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
@@ -24,7 +28,8 @@ while true; do
     $CHROME_BIN \
         --no-sandbox \
         --disable-gpu \
-        --disable-software-rasterizer \
+        --use-gl=angle \
+        --use-angle=swiftshader \
         --remote-debugging-port=19222 \
         --remote-debugging-address=127.0.0.1 \
         --remote-allow-origins="*" \
