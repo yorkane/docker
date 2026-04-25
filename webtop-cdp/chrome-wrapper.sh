@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/with-contenv bash
 # Chromium Wrapper：自动重启 + CDP + 内存优化
 # 适用于 2GB 内存服务器
 
@@ -9,8 +9,12 @@ if [ -z "$CHROME_BIN" ]; then
     exit 1
 fi
 
-# 等待桌面环境就绪
-sleep 3
+# 等待 X server / Wayland 就绪
+echo "⏳ 等待桌面环境就绪..."
+until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
+    sleep 1
+done
+echo "✅ 桌面环境就绪 (DISPLAY=${DISPLAY:-:1})"
 
 while true; do
     echo "🚀 启动 Chromium (CDP :19222)..."
