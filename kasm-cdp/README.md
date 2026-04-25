@@ -57,11 +57,15 @@ ws://<host>:9222/devtools/browser/<id>?token=<your-token>
 
 ## 环境变量
 
+**docker-compose `.env` 变量（KASM 前缀）：**
+
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `CDP_TOKEN` | _(空)_ | CDP 认证 Token，为空则不启动代理，Chrome 直连 |
-| `VNC_PW` | _(必填)_ | VNC 密码（Kasm 基础镜像要求） |
-| `KASM_MAX_FRAME_RATE` | `30` | VNC 最大帧率 |
+| `KASM_VNC_PW` | `password` | KasmVNC Web 桌面密码 |
+| `KASM_CDP_TOKEN` | _(空)_ | CDP 认证 Token，为空则纯转发不认证 |
+| `KASM_CDP_PORT` | `9226` | CDP 外部映射端口 |
+| `KASM_RESOLUTION` | `1280x768` | VNC 分辨率 |
+| `KASM_MAX_FRAME_RATE` | `8` | VNC 最大帧率 |
 | `KASM_JPEG_QUALITY` | `7` | JPEG 压缩质量 (0-9，9 最高) |
 | `KASM_MAX_QUALITY` | `8` | 最大编码质量 (0-9) |
 
@@ -127,11 +131,16 @@ docker run -d \
 
 **使用 docker-compose（推荐）：**
 
-在 `.env` 文件中配置：
+复制 `.env.example` 为 `.env` 并修改：
+
+```bash
+cp .env.example .env
+```
 
 ```env
-CDP_TOKEN=my-secret-token-123
-CDP_PORT=9226
+KASM_VNC_PW=my-password
+KASM_CDP_TOKEN=my-secret-token-123
+KASM_CDP_PORT=9226
 KASM_RESOLUTION=1280x768
 KASM_MAX_FRAME_RATE=8
 KASM_JPEG_QUALITY=7
