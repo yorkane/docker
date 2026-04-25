@@ -11,22 +11,24 @@ FROM kasmweb/chrome:develop
 
 USER root
 
-# 1. Chrome Wrapper：CDP 监听内部端口 19222，由代理统一管理 9222
-#    同时移除 apt 缓存，不安装额外依赖
+# 1. Chrome Wrapper：根据 CDP_TOKEN 决定监听模式
+#    有 Token → Chrome :19222 + 代理 :9222（认证）
+#    无 Token → Chrome 直接 0.0.0.0:9222（零开销）
 RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
     sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    mv /usr/bin/google-chrome /usr/bin/google-chrome-original && \
-    printf '#!/bin/bash\nrm -f /home/kasm-user/chrome-data/SingletonLock\n/usr/bin/google-chrome-original --user-data-dir=/home/kasm-user/chrome-data --remote-debugging-port=19222 --remote-allow-origins="*" "$@"\n' > /usr/bin/google-chrome && \
-    chmod +x /usr/bin/google-chrome
+    apt-get update && rm -rf /var/lib/apt/lists/* && \
+    mv /usr/bin/google-chrome /usr/bin/google-chrome-original
+COPY chrome-wrapper.sh /usr/bin/google-chrome
+RUN chmod +x /usr/bin/google-chrome
 
 # 2. VNC 配置：禁用 SSL、禁用密码、禁止客户端改分辨率
 RUN sed -i 's/-sslOnly/-SecurityTypes None -DisableBasicAuth 1/g' /dockerstartup/vnc_startup.sh && \
     sed -i 's/ssl:/ssl:\n    require_ssl: false/g' /etc/kasmvnc/kasmvnc.yaml && \
     sed -i 's/allow_override_standard_vnc_server_settings: true/allow_override_standard_vnc_server_settings: false/g' /etc/kasmvnc/kasmvnc.yaml
 
-# 3. 注入 Go 代理二进制 (~3MB) 和配置脚本
+# 3. 注入 Go 代理二进制 (~2MB) 和配置脚本
 #    环境变量：
-#      CDP_TOKEN            - CDP 认证 Token (未设置则免认证)
+#      CDP_TOKEN            - CDP 认证 Token (未设置则不启动代理，直接放行)
 #      KASM_MAX_FRAME_RATE  - 最大帧率 (默认 30)
 #      KASM_JPEG_QUALITY    - JPEG 压缩质量 0-9 (默认 7)
 #      KASM_MAX_QUALITY     - 最大编码质量 0-9 (默认 8)
@@ -37,5 +39,5 @@ RUN chmod +x /dockerstartup/kasm-config.sh
 # 切回非特权用户
 USER 1000
 
-# 启动顺序：VNC 配置 → CDP 认证代理(后台) → VNC 桌面
-ENTRYPOINT ["/bin/bash", "-c", "/dockerstartup/kasm-config.sh && cdp-auth-proxy & /dockerstartup/vnc_startup.sh"]
+# 启动顺序：VNC 配置 → [有 Token 才启动代理] → VNC 桌面
+ENTRYPOINT ["/bin/bash", "-c", "/dockerstartup/kasm-config.sh && { [ -n \"$CDP_TOKEN\" ] && cdp-auth-proxy & } ; /dockerstartup/vnc_startup.sh"]

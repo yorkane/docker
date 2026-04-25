@@ -13,17 +13,19 @@
 
 ## 架构
 
+**模式一：无 `CDP_TOKEN`（默认）— 零开销直连**
+
 ```
-                    ┌─────────────────────────────────┐
-                    │         kasm-cdp 容器            │
-                    │                                 │
-外部 IP ──:9222──▶  │  cdp-auth-proxy (Go)            │
-                    │    │ Token 校验                  │
-                    │    ▼                             │
-私网 IP ──:9222──▶  │  直接放行 ──▶ :19222 Chrome CDP  │
-                    │                                 │
-浏览器  ──:6901──▶  │  KasmVNC Web 桌面               │
-                    └─────────────────────────────────┘
+任意 IP ──:9222──▶  Chrome CDP (直接监听 0.0.0.0:9222，无代理)
+浏览器  ──:6901──▶  KasmVNC Web 桌面
+```
+
+**模式二：设置 `CDP_TOKEN` — Token 认证保护**
+
+```
+外部 IP ──:9222──▶  cdp-auth-proxy (Go) ──Token 校验──▶ :19222 Chrome CDP
+私网 IP ──:9222──▶  cdp-auth-proxy (Go) ──直接放行──▶ :19222 Chrome CDP
+浏览器  ──:6901──▶  KasmVNC Web 桌面
 ```
 
 ## CDP 认证机制
@@ -51,13 +53,13 @@ curl -H "Authorization: Bearer <your-token>" http://<host>:9222/json/version
 ws://<host>:9222/devtools/browser/<id>?token=<your-token>
 ```
 
-> **注意**：未设置 `CDP_TOKEN` 时所有请求均放行，与旧版本行为一致。
+> **注意**：未设置 `CDP_TOKEN` 时，认证代理**不会启动**，Chrome 直接监听 `0.0.0.0:9222`，零代理开销。
 
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `CDP_TOKEN` | _(空)_ | CDP 认证 Token，为空则不启用认证 |
+| `CDP_TOKEN` | _(空)_ | CDP 认证 Token，为空则不启动代理，Chrome 直连 |
 | `VNC_PW` | _(必填)_ | VNC 密码（Kasm 基础镜像要求） |
 | `KASM_MAX_FRAME_RATE` | `30` | VNC 最大帧率 |
 | `KASM_JPEG_QUALITY` | `7` | JPEG 压缩质量 (0-9，9 最高) |
