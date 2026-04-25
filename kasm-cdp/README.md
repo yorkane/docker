@@ -13,18 +13,18 @@
 
 ## 架构
 
-**模式一：无 `CDP_TOKEN`（默认）— 零开销直连**
+**模式一：无 `CDP_TOKEN`（默认）— 纯转发**
 
 ```
-任意 IP ──:9222──▶  Chrome CDP (直接监听 0.0.0.0:9222，无代理)
+任意 IP ──:9222──▶  cdp-auth-proxy (纯 splice 转发，无认证) ──▶ :19222 Chrome CDP
 浏览器  ──:6901──▶  KasmVNC Web 桌面
 ```
 
 **模式二：设置 `CDP_TOKEN` — Token 认证保护**
 
 ```
-外部 IP ──:9222──▶  cdp-auth-proxy (Go) ──Token 校验──▶ :19222 Chrome CDP
-私网 IP ──:9222──▶  cdp-auth-proxy (Go) ──直接放行──▶ :19222 Chrome CDP
+外部 IP ──:9222──▶  cdp-auth-proxy ──Token 校验──▶ :19222 Chrome CDP
+私网 IP ──:9222──▶  cdp-auth-proxy ──直接放行──▶ :19222 Chrome CDP
 浏览器  ──:6901──▶  KasmVNC Web 桌面
 ```
 
@@ -53,7 +53,7 @@ curl -H "Authorization: Bearer <your-token>" http://<host>:9222/json/version
 ws://<host>:9222/devtools/browser/<id>?token=<your-token>
 ```
 
-> **注意**：未设置 `CDP_TOKEN` 时，认证代理**不会启动**，Chrome 直接监听 `0.0.0.0:9222`，零代理开销。
+> **注意**：未设置 `CDP_TOKEN` 时，代理以纯转发模式运行，不进行任何认证，所有请求直接放行。
 
 ## 环境变量
 
