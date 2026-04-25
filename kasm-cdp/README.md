@@ -125,6 +125,25 @@ docker run -d \
   ghcr.io/yorkane/kasm-cdp:latest
 ```
 
+**使用 docker-compose（推荐）：**
+
+在 `.env` 文件中配置：
+
+```env
+CDP_TOKEN=my-secret-token-123
+CDP_PORT=9226
+KASM_RESOLUTION=1280x768
+KASM_MAX_FRAME_RATE=8
+KASM_JPEG_QUALITY=7
+KASM_MAX_QUALITY=8
+```
+
+启动：
+
+```bash
+docker compose up -d
+```
+
 ### 4. 验证服务
 
 ```bash

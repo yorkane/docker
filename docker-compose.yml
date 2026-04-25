@@ -1,0 +1,19 @@
+services:
+  chrome-cdp:
+    image: ghcr.io/yorkane/kasm-cdp
+    container_name: kasm-cdp
+    ports:
+      - "6901:6901"   # KasmVNC 的 Web 访问端口 (HTTP，已禁用 HTTPS)
+      - "${CDP_PORT:-9226}:9222"   # CDP 控制端口，通过 .env 配置外部映射端口
+    environment:
+      - VNC_RESOLUTION=${KASM_RESOLUTION:-1280x768}
+      - CDP_TOKEN=${CDP_TOKEN:-}                             # CDP 认证 Token，为空则不启用认证
+      - KASM_MAX_FRAME_RATE=${KASM_MAX_FRAME_RATE:-8}    # VNC 最大帧率
+      - KASM_JPEG_QUALITY=${KASM_JPEG_QUALITY:-7}          # JPEG 压缩质量 0-9
+      - KASM_MAX_QUALITY=${KASM_MAX_QUALITY:-8}            # 最大编码质量 0-9
+    volumes:
+      - ./chrome-data:/home/kasm-user/chrome-data  # 将 Chrome 用户数据（Cookie、LocalStorage等）外置挂载
+    shm_size: "1gb"       # 关键：分配足够的共享内存，防止 Chrome 崩溃
+    security_opt:
+      - seccomp:unconfined # 解决新版 Chrome 在旧版 Docker 上的 syscall 权限问题
+    restart: unless-stopped
