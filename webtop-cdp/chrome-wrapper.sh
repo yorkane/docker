@@ -9,7 +9,10 @@ if [ -z "$CHROME_BIN" ]; then
     exit 1
 fi
 
-# 等待 X server / Wayland 就绪
+# 确保数据目录存在
+mkdir -p /config/chromium-data
+
+# 等待 X server 就绪
 echo "⏳ 等待桌面环境就绪..."
 until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
     sleep 1
@@ -38,8 +41,9 @@ while true; do
         --renderer-process-limit=2 \
         --js-flags="--max-old-space-size=512" \
         --disk-cache-size=33554432 \
+        --disable-breakpad \
         --lang=zh-CN \
-        about:blank
+        about:blank 2>&1
     EXIT_CODE=$?
     echo "⚠️ Chromium 已退出 (code=$EXIT_CODE)，2 秒后自动重启..."
     sleep 2
