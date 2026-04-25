@@ -18,3 +18,26 @@ services:
     security_opt:
       - seccomp:unconfined # 解决新版 Chrome 在旧版 Docker 上的 syscall 权限问题
     restart: unless-stopped
+
+  webtop-cdp:
+    image: ghcr.io/yorkane/webtop-cdp
+    container_name: webtop-cdp
+    ports:
+      - "3001:3001"                                            # Selkies Web 桌面 (HTTPS)
+      - "${WEBTOP_CDP_PORT:-9227}:9222"                        # CDP 控制端口
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Shanghai
+      - CUSTOM_USER=${WEBTOP_USER:-}                           # Web 桌面用户名，空则无认证
+      - PASSWORD=${WEBTOP_PASSWORD:-}                           # Web 桌面密码，空则无认证
+      - CDP_TOKEN=${WEBTOP_CDP_TOKEN:-}                        # CDP 认证 Token
+      - SELKIES_MANUAL_WIDTH=1280
+      - SELKIES_MANUAL_HEIGHT=720
+    volumes:
+      - ./webtop-data:/config                                  # 用户数据持久化
+    shm_size: "256m"
+    security_opt:
+      - seccomp:unconfined
+    mem_limit: 1536m                                           # 硬限制 1.5GB，适合 2GB 服务器
+    restart: unless-stopped
