@@ -22,9 +22,39 @@ if command -v dbus-launch >/dev/null 2>&1; then
     echo "✅ D-Bus 会话总线已启动: $DBUS_SESSION_BUS_ADDRESS"
 fi
 
-# 确保扩展目录存在
-mkdir -p /config/extensions
-chown -R "${PUID:-1000}:${PGID:-1000}" /config/extensions
+# 确保扩展目录和下载目录存在
+mkdir -p /config/extensions /config/downloads
+chown -R "${PUID:-1000}:${PGID:-1000}" /config/extensions /config/downloads
+
+# 设置 Chromium 默认下载目录为 /config/downloads
+PREFS_DIR="/config/chromium-data/Default"
+PREFS_FILE="${PREFS_DIR}/Preferences"
+mkdir -p "$PREFS_DIR"
+if [ ! -f "$PREFS_FILE" ]; then
+    # 首次启动：创建 Preferences 并设置下载目录
+    cat > "$PREFS_FILE" <<'EOF'
+{
+  "download": {
+    "default_directory": "/config/downloads",
+    "prompt_for_download": false
+  }
+}
+EOF
+    chown "${PUID:-1000}:${PGID:-1000}" "$PREFS_FILE"
+    echo "✅ 已设置默认下载目录: /config/downloads"
+elif ! grep -q '"/config/downloads"' "$PREFS_FILE" 2>/dev/null; then
+    # 已有 Preferences 但未设置下载目录：用 python/sed 注入
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "
+import json, sys
+with open('$PREFS_FILE', 'r') as f:
+    prefs = json.load(f)
+prefs.setdefault('download', {})['default_directory'] = '/config/downloads'
+with open('$PREFS_FILE', 'w') as f:
+    json.dump(prefs, f, indent=2)
+" 2>/dev/null && echo "✅ 已更新下载目录: /config/downloads"
+    fi
+fi
 
 # 启动 Chromium（exec 让 s6 管理进程生命周期）
 exec s6-setuidgid abc /usr/local/bin/chrome-wrapper.sh
