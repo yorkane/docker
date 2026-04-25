@@ -2,9 +2,9 @@
 # s6 服务：Chromium 浏览器（自动重启）
 # 以 abc 用户身份运行 chrome-wrapper.sh
 
-# 确保数据目录存在并归属 abc 用户
+# 确保数据目录存在并归属 PUID 用户（默认 1000）
 mkdir -p /config/chromium-data
-chown abc:users /config/chromium-data
+chown -R "${PUID:-1000}:${PGID:-1000}" /config/chromium-data
 # 清理可能残留的 SingletonLock
 rm -f /config/chromium-data/SingletonLock
 
