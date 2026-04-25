@@ -54,6 +54,7 @@ docker run -d \
 | `WEBTOP_CDP_PORT` | `9227` | 宿主机 CDP 映射端口 |
 | `WEBTOP_PASSWORD` | _(空)_ | Web 桌面密码，空则无认证 |
 | `WEBTOP_RESOLUTION` | `1280x720` | VNC/桌面分辨率 |
+| `CHROME_EXTENSIONS` | _(空)_ | 预加载扩展路径（逗号分隔），或放入 `/config/extensions/` 自动加载 |
 | `PUID` | `1000` | 运行用户 UID |
 | `PGID` | `1000` | 运行用户 GID |
 

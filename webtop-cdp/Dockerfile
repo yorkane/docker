@@ -9,8 +9,9 @@ RUN go mod init cdp-auth-proxy && \
 # === Stage 2: 最终镜像 ===
 FROM lscr.io/linuxserver/webtop:alpine-openbox
 
-# 1. 安装 Chromium + xdpyinfo（用于检测 X server 就绪）
-RUN apk add --no-cache chromium xdpyinfo
+# 1. 安装 Chromium + xdpyinfo（用于检测 X server 就绪）+ dbus（扩展需要）
+RUN apk add --no-cache chromium xdpyinfo dbus dbus-x11 && \
+    mkdir -p /config/extensions
 
 # 2. 注入 Chrome Wrapper（自动重启 + CDP 内存优化参数）
 COPY chrome-wrapper.sh /usr/local/bin/chrome-wrapper.sh

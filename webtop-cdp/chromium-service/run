@@ -15,5 +15,16 @@ until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
 done
 echo "✅ 桌面环境就绪 (DISPLAY=${DISPLAY:-:1})"
 
+# 启动 D-Bus 会话总线（扩展需要）
+if command -v dbus-launch >/dev/null 2>&1; then
+    eval $(dbus-launch --sh-syntax)
+    export DBUS_SESSION_BUS_ADDRESS
+    echo "✅ D-Bus 会话总线已启动: $DBUS_SESSION_BUS_ADDRESS"
+fi
+
+# 确保扩展目录存在
+mkdir -p /config/extensions
+chown -R "${PUID:-1000}:${PGID:-1000}" /config/extensions
+
 # 启动 Chromium（exec 让 s6 管理进程生命周期）
 exec s6-setuidgid abc /usr/local/bin/chrome-wrapper.sh

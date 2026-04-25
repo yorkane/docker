@@ -4,6 +4,17 @@
 
 CHROME_BIN=$(which chromium-browser 2>/dev/null || which chromium 2>/dev/null)
 
+# 构建扩展加载参数（如有 CHROME_EXTENSIONS 环境变量或 /config/extensions 目录）
+EXT_ARGS=""
+if [ -n "$CHROME_EXTENSIONS" ]; then
+    EXT_ARGS="--load-extension=$CHROME_EXTENSIONS"
+elif [ -d "/config/extensions" ] && [ "$(ls -A /config/extensions 2>/dev/null)" ]; then
+    EXT_DIRS=$(find /config/extensions -mindepth 1 -maxdepth 1 -type d | paste -sd, -)
+    if [ -n "$EXT_DIRS" ]; then
+        EXT_ARGS="--load-extension=$EXT_DIRS"
+    fi
+fi
+
 if [ -z "$CHROME_BIN" ]; then
     echo "❌ Chromium 未找到"
     exit 1
@@ -23,7 +34,6 @@ while true; do
         --disable-dev-shm-usage \
         --disable-background-networking \
         --disable-default-apps \
-        --disable-extensions \
         --disable-sync \
         --disable-translate \
         --no-first-run \
@@ -34,6 +44,7 @@ while true; do
         --disk-cache-size=33554432 \
         --disable-breakpad \
         --lang=zh-CN \
+        $EXT_ARGS \
         about:blank 2>&1
     EXIT_CODE=$?
     echo "⚠️ Chromium 已退出 (code=$EXIT_CODE)，2 秒后自动重启..."
