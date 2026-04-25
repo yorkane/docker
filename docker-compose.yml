@@ -1,24 +1,4 @@
 services:
-  chrome-cdp:
-    image: ghcr.io/yorkane/kasm-cdp
-    container_name: kasm-cdp
-    ports:
-      - "6901:6901"   # KasmVNC 的 Web 访问端口 (HTTP，已禁用 HTTPS)
-      - "${KASM_CDP_PORT:-9226}:9222"   # CDP 控制端口
-    environment:
-      - VNC_PW=${KASM_VNC_PW:-disabled}                       # VNC 密码，'disabled' 或空则禁用认证
-      - VNC_RESOLUTION=${KASM_RESOLUTION:-1280x768}
-      - CDP_TOKEN=${KASM_CDP_TOKEN:-}                        # CDP 认证 Token，为空则不启用认证
-      - KASM_MAX_FRAME_RATE=${KASM_MAX_FRAME_RATE:-8}        # VNC 最大帧率
-      - KASM_JPEG_QUALITY=${KASM_JPEG_QUALITY:-7}            # JPEG 压缩质量 0-9
-      - KASM_MAX_QUALITY=${KASM_MAX_QUALITY:-8}              # 最大编码质量 0-9
-    volumes:
-      - ./chrome-data:/home/kasm-user/chrome-data  # Chrome 用户数据外置挂载
-    shm_size: "1gb"       # 分配足够共享内存，防止 Chrome 崩溃
-    security_opt:
-      - seccomp:unconfined # 解决新版 Chrome 在旧版 Docker 上的 syscall 权限问题
-    restart: unless-stopped
-
   webtop-cdp:
     image: ghcr.io/yorkane/webtop-cdp
     container_name: webtop-cdp
@@ -32,8 +12,17 @@ services:
       - CUSTOM_USER=${WEBTOP_USER:-}                           # Web 桌面用户名，空则无认证
       - PASSWORD=${WEBTOP_PASSWORD:-}                           # Web 桌面密码，空则无认证
       - CDP_TOKEN=${WEBTOP_CDP_TOKEN:-}                        # CDP 认证 Token
-      - SELKIES_MANUAL_WIDTH=1280
-      - SELKIES_MANUAL_HEIGHT=720
+      # --- Selkies 画质 & 性能 ---
+      - SELKIES_FRAMERATE=${SELKIES_FRAMERATE:-30}             # 最大帧率
+      - SELKIES_ENCODER=${SELKIES_ENCODER:-jpeg}               # 编码器
+      - SELKIES_JPEG_QUALITY=${SELKIES_JPEG_QUALITY:-80}       # JPEG 画质 1-100
+      # --- 音频 ---
+      - SELKIES_AUDIO_ENABLED=${SELKIES_AUDIO_ENABLED:-true}   # 默认开启音频
+      - SELKIES_MICROPHONE_ENABLED=${SELKIES_MICROPHONE_ENABLED:-true}
+      - SELKIES_AUDIO_BITRATE=${SELKIES_AUDIO_BITRATE:-320000}
+      # --- 分辨率 ---
+      - SELKIES_MANUAL_WIDTH=${SELKIES_MANUAL_WIDTH:-1280}
+      - SELKIES_MANUAL_HEIGHT=${SELKIES_MANUAL_HEIGHT:-720}
     volumes:
       - ./webtop-data:/config                                  # 用户数据持久化
     shm_size: "256m"
