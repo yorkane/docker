@@ -6,7 +6,7 @@ services:
       - "6901:6901"   # KasmVNC 的 Web 访问端口 (HTTP，已禁用 HTTPS)
       - "${KASM_CDP_PORT:-9226}:9222"   # CDP 控制端口
     environment:
-      - VNC_PW=${KASM_VNC_PW:-}                                # VNC 密码，为空则禁用认证
+      - VNC_PW=${KASM_VNC_PW:-disabled}                       # VNC 密码，'disabled' 或空则禁用认证
       - VNC_RESOLUTION=${KASM_RESOLUTION:-1280x768}
       - CDP_TOKEN=${KASM_CDP_TOKEN:-}                        # CDP 认证 Token，为空则不启用认证
       - KASM_MAX_FRAME_RATE=${KASM_MAX_FRAME_RATE:-8}        # VNC 最大帧率
