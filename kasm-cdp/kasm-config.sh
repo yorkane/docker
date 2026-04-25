@@ -7,7 +7,8 @@ USER_YAML="$HOME/.vnc/kasmvnc.yaml"
 
 # ========== 1. VNC 认证配置 ==========
 if [ -z "$VNC_PW" ]; then
-    # 无密码 → 禁用认证
+    # 无密码 → 禁用认证（设置占位密码以满足 KasmVNC 启动要求）
+    export VNC_PW="disabled"
     sed -i 's/__KASM_AUTH_FLAGS__/-SecurityTypes None -DisableBasicAuth 1/g' "$VNC_STARTUP"
     echo "🔓 VNC 认证: 已禁用（VNC_PW 未设置）"
 else
