@@ -1,3 +1,20 @@
 #!/usr/bin/with-contenv bash
 # s6 服务：Chromium 浏览器（自动重启）
+# 以 abc 用户身份运行 chrome-wrapper.sh
+
+# 确保数据目录存在并归属 abc 用户
+mkdir -p /config/chromium-data
+chown -R abc:abc /config/chromium-data
+
+# 设置 XDG_RUNTIME_DIR
+export XDG_RUNTIME_DIR=/config/.XDG
+
+# 等待 X server 就绪
+echo "⏳ 等待桌面环境就绪..."
+until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
+    sleep 1
+done
+echo "✅ 桌面环境就绪 (DISPLAY=${DISPLAY:-:1})"
+
+# 启动 Chromium（exec 让 s6 管理进程生命周期）
 exec s6-setuidgid abc /usr/local/bin/chrome-wrapper.sh

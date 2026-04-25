@@ -1,5 +1,5 @@
-#!/usr/bin/with-contenv bash
-# Chromium Wrapper：自动重启 + CDP + 内存优化
+#!/bin/bash
+# Chromium Wrapper：自动重启循环 + CDP + 内存优化
 # 适用于 2GB 内存服务器
 
 CHROME_BIN=$(which chromium-browser 2>/dev/null || which chromium 2>/dev/null)
@@ -8,20 +8,6 @@ if [ -z "$CHROME_BIN" ]; then
     echo "❌ Chromium 未找到"
     exit 1
 fi
-
-# 确保数据目录存在
-mkdir -p /config/chromium-data
-
-# 设置 XDG_RUNTIME_DIR
-export XDG_RUNTIME_DIR=/tmp/runtime-abc
-mkdir -p "$XDG_RUNTIME_DIR"
-
-# 等待 X server 就绪
-echo "⏳ 等待桌面环境就绪..."
-until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
-    sleep 1
-done
-echo "✅ 桌面环境就绪 (DISPLAY=${DISPLAY:-:1})"
 
 while true; do
     echo "🚀 启动 Chromium (CDP :19222)..."
