@@ -61,7 +61,7 @@ ws://<host>:9222/devtools/browser/<id>?token=<your-token>
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
-| `KASM_VNC_PW` | `password` | KasmVNC Web 桌面密码 |
+| `KASM_VNC_PW` | _(空)_ | VNC 桌面密码，为空则禁用认证（无需登录） |
 | `KASM_CDP_TOKEN` | _(空)_ | CDP 认证 Token，为空则纯转发不认证 |
 | `KASM_CDP_PORT` | `9226` | CDP 外部映射端口 |
 | `KASM_RESOLUTION` | `1280x768` | VNC 分辨率 |
