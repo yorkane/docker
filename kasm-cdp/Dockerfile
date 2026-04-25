@@ -40,6 +40,6 @@ RUN chmod +x /dockerstartup/kasm-config.sh
 # 切回非特权用户
 USER 1000
 
-# 启动顺序：VNC 配置 → CDP 代理(后台) → VNC 桌面
-# 无 CDP_TOKEN 时代理为纯转发模式（零认证开销，splice 零拷贝）
-ENTRYPOINT ["/bin/bash", "-c", "/dockerstartup/kasm-config.sh && cdp-auth-proxy & /dockerstartup/vnc_startup.sh"]
+# 启动顺序：source 配置 → CDP 代理(后台) → VNC 桌面
+# 用 source 确保 kasm-config.sh 中的 export 变量传递到 vnc_startup.sh
+ENTRYPOINT ["/bin/bash", "-c", "source /dockerstartup/kasm-config.sh && cdp-auth-proxy & /dockerstartup/vnc_startup.sh"]
