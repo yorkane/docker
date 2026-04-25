@@ -21,8 +21,9 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && 
 COPY chrome-wrapper.sh /usr/bin/google-chrome
 RUN chmod +x /usr/bin/google-chrome
 
-# 2. VNC 配置：禁用 SSL，认证由运行时动态配置
+# 2. VNC 配置：禁用 SSL，认证由运行时 kasm-config.sh 动态配置
 RUN sed -i 's/-sslOnly/__KASM_AUTH_FLAGS__/g' /dockerstartup/vnc_startup.sh && \
+    chmod a+w /dockerstartup/vnc_startup.sh && \
     sed -i 's/ssl:/ssl:\n    require_ssl: false/g' /etc/kasmvnc/kasmvnc.yaml && \
     sed -i 's/allow_override_standard_vnc_server_settings: true/allow_override_standard_vnc_server_settings: false/g' /etc/kasmvnc/kasmvnc.yaml
 
