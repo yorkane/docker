@@ -4,10 +4,9 @@
 
 # 确保数据目录存在并归属 abc 用户
 mkdir -p /config/chromium-data
-chown -R abc:abc /config/chromium-data
-
-# 设置 XDG_RUNTIME_DIR
-export XDG_RUNTIME_DIR=/config/.XDG
+chown abc:users /config/chromium-data
+# 清理可能残留的 SingletonLock
+rm -f /config/chromium-data/SingletonLock
 
 # 等待 X server 就绪
 echo "⏳ 等待桌面环境就绪..."
