@@ -23,11 +23,14 @@ fi
 # GPU 参数：默认禁用 GPU，设置 CHROME_ENABLE_GPU=true 启用
 GPU_ARGS=""
 if [ "${CHROME_ENABLE_GPU}" = "true" ] || [ "${CHROME_ENABLE_GPU}" = "1" ]; then
+    # 启用 GPU 模式（使用软件加速 SwiftShader）
     GPU_ARGS="--use-gl=angle --use-angle=swiftshader"
-    echo "🎮 GPU 模式: SwiftShader (软件渲染)"
+    echo "🎮 GPU 模式: SwiftShader (软件渲染加速)"
 else
-    GPU_ARGS="--disable-gpu --disable-gpu-compositing --disable-vulkan --disable-software-rasterizer --in-process-gpu --use-gl=disabled"
-    echo "🖥️ GPU 模式: 已禁用 (纯 CPU)"
+    # 彻底禁用 GPU 模式，防止在无 GPU 服务器上崩溃 (SIGTRAP 133)
+    # 移除 --in-process-gpu 和 --use-gl=disabled，这两者在某些网站上不稳定
+    GPU_ARGS="--disable-gpu --disable-software-rasterizer --disable-vulkan --disable-gpu-compositing --disable-gpu-rasterization --disable-3d-apis"
+    echo "🖥️ GPU 模式: 已彻底禁用 (纯 CPU)"
 fi
 
 while true; do
