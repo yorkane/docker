@@ -50,7 +50,8 @@ docker compose up -d chrome-cdp
 | 服务 | Kasm CDP | Webtop CDP |
 |---|---|---|
 | Web 桌面 | `http://host:6901` | `https://host:3001` |
-| CDP 协议 | `http://host:9226/json/version` | `http://host:9227/json/version` |
+| CDP 协议 | `http://host:9226/json/version` | `https://host:9227/<token>/json/version` |
+| Playwright | — | `wss://host:9227/<token>/` |
 
 ## CI/CD
 

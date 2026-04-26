@@ -11,7 +11,7 @@ FROM lscr.io/linuxserver/webtop:alpine-openbox
 
 # 1. 安装 Chromium + xdpyinfo（用于检测 X server 就绪）+ dbus（扩展需要）
 RUN apk add --no-cache chromium xdpyinfo dbus dbus-x11 font-noto-cjk && \
-    mkdir -p /config/extensions
+    mkdir -p /config/extensions /config/ssl
 
 # 2. 注入 Chrome Wrapper（自动重启 + CDP 内存优化参数）
 COPY chrome-wrapper.sh /usr/local/bin/chrome-wrapper.sh
