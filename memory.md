@@ -31,7 +31,7 @@
 │   └── README.md
 ├── webtop-cdp/               # 轻量版 CDP 容器（Alpine + Openbox + Chromium）
 │   ├── Dockerfile            # 多阶段构建: golang → linuxserver/webtop:alpine-openbox
-│   ├── cdp-auth-proxy.go     # CDP 认证代理（Go，与 kasm-cdp 共用同一份代码）
+│   ├── cdp-auth-proxy.go     # CDP TLS 代理（Go，TLS + 路径 Token + WebSocket）
 │   ├── chrome-wrapper.sh     # Chromium 自动重启 + 内存优化参数
 │   ├── cdp-service/          # s6-overlay 服务定义：CDP 代理
 │   │   ├── run
@@ -58,25 +58,30 @@
 | 操作系统 | Ubuntu | Alpine |
 | 浏览器 | Google Chrome | Chromium |
 | 桌面方案 | KasmVNC (HTTP :6901) | Selkies WebRTC (HTTPS :3001) |
+| CDP 传输 | HTTP (明文) | **HTTPS/WSS (TLS)** |
+| 认证方式 | Query/Bearer Token | **路径前缀 Token** |
 | 进程管理 | Kasm 内置 + bash | s6-overlay |
 | 运行内存 | ~800MB+ | ~300-400MB |
 | 镜像大小 | ~1.5GB | ~500MB |
 | 适用场景 | 资源充足服务器 (4GB+) | 小内存服务器 (2GB) |
-| 画质控制 | KasmVNC YAML 配置 | Selkies 环境变量 |
 
-## 共享核心组件
+## CDP 认证代理
 
-### CDP 认证代理 (`cdp-auth-proxy.go`)
+### webtop-cdp (`cdp-auth-proxy.go` — TLS 版)
 
-两个镜像共用同一份 Go 源码（分别存储在各自目录中）。
+- **监听**: `0.0.0.0:9222` **TLS**（容器内端口）
+- **上游**: `127.0.0.1:19222`（Chromium 实际 CDP 端口，明文）
+- **认证**: Token 嵌入 URL 路径前缀 `/<token>/`，不再使用 Bearer/Query
+- **TLS 证书**: 启动时自动生成 P-256 ECDSA 自签名证书（或通过 `CDP_TLS_CERT`/`CDP_TLS_KEY` 指定）
+- **Playwright 连接**: `connectOverCDP('https://host:9227/<token>/')`
+- **URL 重写**: 自动将 `/json/version` 响应中的 `ws://127.0.0.1:19222` 重写为 `wss://host/<token>`
+- **技术**: Go 标准库 `net/http` + `httputil.ReverseProxy` + WebSocket hijack
 
-- **监听**: `0.0.0.0:9222`（容器内端口）
-- **上游**: `127.0.0.1:19222`（Chrome/Chromium 实际 CDP 端口）
-- **认证逻辑**:
-  - 环境变量 `CDP_TOKEN` 未设置 → 全部放行
-  - 私有网段 (127/8, 10/8, 172.16/12, 192.168/16) → 免认证
-  - 外部 IP → 需 `?token=xxx` 或 `Authorization: Bearer xxx`
-- **技术**: Go 静态编译、TCP splice 零拷贝、goroutine-per-connection
+### kasm-cdp (`cdp-auth-proxy.go` — TCP 版)
+
+- **监听**: `0.0.0.0:9222` 明文（容器内端口）
+- **认证**: 私有网段免认证，外部 IP 需 `?token=xxx` 或 `Authorization: Bearer xxx`
+- **技术**: Go 静态编译、TCP splice 零拷贝
 
 ### Chrome Wrapper
 
@@ -146,12 +151,15 @@ docker compose up -d webtop-cdp
 # 启动完整版
 docker compose up -d chrome-cdp
 
-# 验证 CDP 可用性
-curl http://localhost:9227/json/version              # webtop-cdp
-curl http://localhost:9226/json/version              # kasm-cdp
+# 验证 CDP (webtop-cdp，TLS + 路径 Token)
+curl -sk https://localhost:9227/<token>/json/version
 
-# 带 Token 认证
-curl "http://host:9227/json/version?token=<token>"
+# 验证 CDP (kasm-cdp，明文)
+curl http://localhost:9226/json/version
+
+# Playwright 远程连接
+# NODE_TLS_REJECT_UNAUTHORIZED=0 (自签名证书)
+# connectOverCDP('https://host:9227/<token>/')
 
 # 查看日志
 docker logs -f webtop-cdp
@@ -160,7 +168,7 @@ docker logs -f kasm-cdp
 
 ## 注意事项
 
-1. **`cdp-auth-proxy.go` 在两个目录中各有一份副本**，修改时需同步更新（或后续考虑提取为共享构建上下文）
+1. **`cdp-auth-proxy.go` 两个版本已分离**：webtop-cdp 是 TLS + HTTP 反向代理版，kasm-cdp 是原始 TCP splice 版
 2. **`.env` 文件已 gitignore**，只有 `.env.example` 被跟踪
 3. **`webtop-data/` 和 `chrome-data/`** 是容器 volume 挂载目录，已 gitignore
 4. **Dockerfile 采用多阶段构建**：Stage 1 用 `golang:1.23-alpine` 编译 Go 代理，Stage 2 为最终运行镜像
