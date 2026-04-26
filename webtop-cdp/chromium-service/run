@@ -15,10 +15,24 @@ until xdpyinfo -display "${DISPLAY:-:1}" >/dev/null 2>&1; do
 done
 echo "✅ 桌面环境就绪 (DISPLAY=${DISPLAY:-:1})"
 
+# 启动系统 D-Bus 守护进程（如果未运行）
+if [ ! -S /var/run/dbus/system_bus_socket ]; then
+    mkdir -p /var/run/dbus
+    if command -v dbus-daemon >/dev/null 2>&1; then
+        dbus-daemon --system --fork 2>/dev/null
+        echo "✅ D-Bus 系统总线已启动"
+    fi
+fi
+
 # 启动 D-Bus 会话总线（扩展需要）
 if command -v dbus-launch >/dev/null 2>&1; then
     eval $(dbus-launch --sh-syntax)
     export DBUS_SESSION_BUS_ADDRESS
+    # 等待会话总线就绪
+    for i in $(seq 1 10); do
+        dbus-send --session --dest=org.freedesktop.DBus --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames >/dev/null 2>&1 && break
+        sleep 0.2
+    done
     echo "✅ D-Bus 会话总线已启动: $DBUS_SESSION_BUS_ADDRESS"
 fi
 

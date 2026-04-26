@@ -20,16 +20,21 @@ if [ -z "$CHROME_BIN" ]; then
     exit 1
 fi
 
+# GPU 参数：默认禁用 GPU，设置 CHROME_ENABLE_GPU=true 启用
+GPU_ARGS=""
+if [ "${CHROME_ENABLE_GPU}" = "true" ] || [ "${CHROME_ENABLE_GPU}" = "1" ]; then
+    GPU_ARGS="--use-gl=angle --use-angle=swiftshader"
+    echo "🎮 GPU 模式: SwiftShader (软件渲染)"
+else
+    GPU_ARGS="--disable-gpu --disable-gpu-compositing --disable-vulkan --disable-software-rasterizer --in-process-gpu --use-gl=disabled"
+    echo "🖥️ GPU 模式: 已禁用 (纯 CPU)"
+fi
+
 while true; do
     echo "🚀 启动 Chromium (CDP :19222)..."
     $CHROME_BIN \
         --no-sandbox \
-        --disable-gpu \
-        --disable-gpu-compositing \
-        --disable-vulkan \
-        --disable-software-rasterizer \
-        --in-process-gpu \
-        --use-gl=disabled \
+        $GPU_ARGS \
         --remote-debugging-port=19222 \
         --remote-debugging-address=127.0.0.1 \
         --remote-allow-origins="*" \
