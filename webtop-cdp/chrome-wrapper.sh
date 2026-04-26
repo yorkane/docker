@@ -25,8 +25,11 @@ while true; do
     $CHROME_BIN \
         --no-sandbox \
         --disable-gpu \
-        --use-gl=angle \
-        --use-angle=swiftshader \
+        --disable-gpu-compositing \
+        --disable-vulkan \
+        --disable-software-rasterizer \
+        --in-process-gpu \
+        --use-gl=disabled \
         --remote-debugging-port=19222 \
         --remote-debugging-address=127.0.0.1 \
         --remote-allow-origins="*" \
