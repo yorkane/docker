@@ -43,9 +43,10 @@ const (
 )
 
 var (
-	token    string
-	certFile string
-	keyFile  string
+	token        string
+	certFile     string
+	keyFile      string
+	disableHTTPS bool
 )
 
 type ctxKey string
@@ -210,11 +211,15 @@ func rewriteResponse(resp *http.Response) error {
 	}
 
 	// 构建替换目标
+	scheme := "wss"
+	if disableHTTPS {
+		scheme = "ws"
+	}
 	var newBase string
 	if token != "" {
-		newBase = fmt.Sprintf("wss://%s/%s", host, token)
+		newBase = fmt.Sprintf("%s://%s/%s", scheme, host, token)
 	} else {
-		newBase = fmt.Sprintf("wss://%s", host)
+		newBase = fmt.Sprintf("%s://%s", scheme, host)
 	}
 
 	s := string(body)
@@ -230,12 +235,15 @@ func rewriteResponse(resp *http.Response) error {
 // ───────────────────── 主入口 ─────────────────────
 
 func main() {
+	disableHTTPS = os.Getenv("CDP_DISABLE_HTTPS") == "true"
 	token = os.Getenv("CDP_TOKEN")
 	certFile = envOr("CDP_TLS_CERT", "/config/ssl/cdp-cert.pem")
 	keyFile = envOr("CDP_TLS_KEY", "/config/ssl/cdp-key.pem")
 
-	if err := ensureTLSCerts(); err != nil {
-		log.Fatalf("❌ TLS setup failed: %v", err)
+	if !disableHTTPS {
+		if err := ensureTLSCerts(); err != nil {
+			log.Fatalf("❌ TLS setup failed: %v", err)
+		}
 	}
 
 	// 反向代理
@@ -279,12 +287,26 @@ func main() {
 	}
 
 	if token != "" {
-		log.Printf("🚀 CDP TLS Proxy: https://*:9222/%s/ → %s", token, upstreamAddr)
+		if disableHTTPS {
+			log.Printf("🚀 CDP Proxy: http://*:9222/%s/ → %s", token, upstreamAddr)
+		} else {
+			log.Printf("🚀 CDP TLS Proxy: https://*:9222/%s/ → %s", token, upstreamAddr)
+		}
 	} else {
-		log.Printf("🚀 CDP TLS Proxy: https://*:9222/ → %s (no token)", upstreamAddr)
+		if disableHTTPS {
+			log.Printf("🚀 CDP Proxy: http://*:9222/ → %s (no token)", upstreamAddr)
+		} else {
+			log.Printf("🚀 CDP TLS Proxy: https://*:9222/ → %s (no token)", upstreamAddr)
+		}
 	}
 
-	if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
-		log.Fatal(err)
+	if disableHTTPS {
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
