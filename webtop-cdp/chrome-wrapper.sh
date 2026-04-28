@@ -54,6 +54,8 @@ while true; do
         --js-flags="--max-old-space-size=512" \
         --disk-cache-size=33554432 \
         --disable-breakpad \
+        --disable-async-dns \
+        --disable-features=AsyncDns \
         --lang=${CHROME_LANGUAGE:-zh-CN} \
         $EXT_ARGS \
         about:blank 2>&1
