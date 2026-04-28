@@ -9,8 +9,8 @@ RUN go mod init cdp-auth-proxy && \
 # === Stage 2: 最终镜像 ===
 FROM lscr.io/linuxserver/webtop:alpine-openbox
 
-# 1. 安装 Chromium + xdpyinfo（用于检测 X server 就绪）+ dbus（系统 + 会话总线）
-RUN apk add --no-cache chromium xdpyinfo dbus dbus-x11 font-noto-cjk && \
+# 1. 安装 Chromium + 语言包 + xdpyinfo（用于检测 X server 就绪）+ dbus（系统 + 会话总线）
+RUN apk add --no-cache chromium chromium-lang xdpyinfo dbus dbus-x11 font-noto-cjk && \
     mkdir -p /config/extensions /config/ssl /var/run/dbus && \
     dbus-uuidgen > /var/lib/dbus/machine-id 2>/dev/null || true
 
