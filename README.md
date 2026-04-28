@@ -9,6 +9,7 @@
 |---|---|---|---|
 | [kasm-cdp](./kasm-cdp/) | Ubuntu + KasmVNC | Chrome CDP 自动化容器（功能完整版） | ~800MB |
 | [webtop-cdp](./webtop-cdp/) | Alpine + Openbox | Chromium CDP 轻量容器（2GB 服务器优化） | ~190MB |
+| [postgres](./postgres/) | Debian + PostgreSQL | 包含 pgvector, zhparser, pgmq 扩展的 PostgreSQL 镜像 | ~200MB |
 
 ## 快速开始
 

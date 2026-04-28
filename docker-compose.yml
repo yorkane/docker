@@ -32,3 +32,16 @@ services:
       - seccomp:unconfined
     mem_limit: 1536m                                           # 硬限制 1.5GB，适合 2GB 服务器
     restart: unless-stopped
+
+  postgres:
+    image: ghcr.io/yorkane/postgres:latest
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Wasu@3.14
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
