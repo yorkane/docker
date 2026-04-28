@@ -57,6 +57,9 @@ while true; do
         --disable-breakpad \
         --disable-async-dns \
         --disable-features=AsyncDns \
+        --ignore-certificate-errors \
+        --allow-running-insecure-content \
+        --test-type \
         --lang=${CHROME_LANGUAGE:-zh-CN} \
         $EXT_ARGS \
         about:blank 2>&1
