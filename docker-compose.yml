@@ -3,7 +3,7 @@ services:
     image: ghcr.io/yorkane/webtop-cdp
     container_name: webtop-cdp
     ports:
-      - "3001:3001"                                            # Selkies Web 桌面 (HTTPS)
+      - "${WEBTOP_PORT:-3001}:${WEBTOP_CONTAINER_PORT:-3001}" # Web 桌面端口 (3000为纯HTTP, 3001为HTTPS)
       - "${WEBTOP_CDP_PORT:-9227}:9222"                        # CDP 控制端口 (HTTPS/WSS)
     environment:
       - PUID=1000
