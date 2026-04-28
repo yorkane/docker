@@ -38,19 +38,12 @@ volumes:
   pg-data:
 ```
 
-在进入数据库后，可以使用以下 SQL 启用相应的扩展：
+在容器首次启动初始化数据库时，以下扩展将会被自动启用：
 
-```sql
--- 启用 pg_stat_statements
-CREATE EXTENSION pg_stat_statements;
+- `pg_stat_statements`
+- `vector`
+- `pg_trgm`
+- `zhparser`
+- `pgmq`
 
--- 启用 pgvector
-CREATE EXTENSION vector;
-
--- 启用 zhparser
-CREATE EXTENSION pg_trgm;
-CREATE EXTENSION zhparser;
-
--- 启用 pgmq
-CREATE EXTENSION pgmq;
-```
+无需手动进入数据库执行 `CREATE EXTENSION` 命令。
