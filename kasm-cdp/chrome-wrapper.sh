@@ -7,7 +7,8 @@ while true; do
     /usr/bin/google-chrome-original \
         --user-data-dir=/home/kasm-user/chrome-data \
         --remote-debugging-port=19222 \
-        --remote-allow-origins="*" "$@"
+        --remote-allow-origins="*" \
+        --lang=${CHROME_LANGUAGE:-zh-CN} "$@"
     echo "⚠️ Chrome 已退出 (code=$?)，2 秒后自动重启..."
     sleep 2
 done

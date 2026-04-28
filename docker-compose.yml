@@ -25,6 +25,9 @@ services:
       # --- 分辨率 ---
       - SELKIES_MANUAL_WIDTH=${SELKIES_MANUAL_WIDTH:-1280}
       - SELKIES_MANUAL_HEIGHT=${SELKIES_MANUAL_HEIGHT:-720}
+      # --- 浏览器 ---
+      - CHROME_ENABLE_GPU=${CHROME_ENABLE_GPU:-false}          # 是否启用软件 GPU 加速
+      - CHROME_LANGUAGE=${CHROME_LANGUAGE:-zh-CN}              # 浏览器界面语言 (默认 zh-CN)
     volumes:
       - ./webtop-data:/config                                  # 用户数据持久化
     shm_size: "256m"

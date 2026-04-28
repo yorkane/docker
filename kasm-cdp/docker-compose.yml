@@ -12,6 +12,7 @@ services:
       - KASM_MAX_FRAME_RATE=${KASM_MAX_FRAME_RATE:-8}        # VNC 最大帧率
       - KASM_JPEG_QUALITY=${KASM_JPEG_QUALITY:-7}            # JPEG 压缩质量 0-9
       - KASM_MAX_QUALITY=${KASM_MAX_QUALITY:-8}              # 最大编码质量 0-9
+      - CHROME_LANGUAGE=${CHROME_LANGUAGE:-zh-CN}            # 浏览器界面语言 (默认 zh-CN)
     volumes:
       - ./chrome-data:/home/kasm-user/chrome-data  # Chrome 用户数据外置挂载
     shm_size: "1gb"       # 分配足够共享内存，防止 Chrome 崩溃
