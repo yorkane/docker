@@ -46,12 +46,14 @@ var (
 	token        string
 	certFile     string
 	keyFile      string
-	disableHTTPS bool
 )
 
 type ctxKey string
 
-const ctxHostKey ctxKey = "origHost"
+const (
+	ctxHostKey   ctxKey = "origHost"
+	ctxSchemeKey ctxKey = "origScheme"
+)
 
 // ───────────────────── TLS 证书 ─────────────────────
 
@@ -211,9 +213,10 @@ func rewriteResponse(resp *http.Response) error {
 	}
 
 	// 构建替换目标
-	scheme := "wss"
-	if disableHTTPS {
-		scheme = "ws"
+	schemeCtx, _ := resp.Request.Context().Value(ctxSchemeKey).(string)
+	scheme := "ws"
+	if schemeCtx == "https" {
+		scheme = "wss"
 	}
 	var newBase string
 	if token != "" {
@@ -235,15 +238,12 @@ func rewriteResponse(resp *http.Response) error {
 // ───────────────────── 主入口 ─────────────────────
 
 func main() {
-	disableHTTPS = os.Getenv("CDP_DISABLE_HTTPS") == "true"
 	token = os.Getenv("CDP_TOKEN")
 	certFile = envOr("CDP_TLS_CERT", "/config/ssl/cdp-cert.pem")
 	keyFile = envOr("CDP_TLS_KEY", "/config/ssl/cdp-key.pem")
 
-	if !disableHTTPS {
-		if err := ensureTLSCerts(); err != nil {
-			log.Fatalf("❌ TLS setup failed: %v", err)
-		}
+	if err := ensureTLSCerts(); err != nil {
+		log.Fatalf("❌ TLS setup failed: %v", err)
 	}
 
 	// 反向代理
@@ -269,8 +269,13 @@ func main() {
 			}
 		}
 
-		// 保存原始 Host 用于 URL 重写
+		// 保存原始 Host 和 Scheme 用于 URL 重写
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
 		ctx := context.WithValue(r.Context(), ctxHostKey, r.Host)
+		ctx = context.WithValue(ctx, ctxSchemeKey, scheme)
 		r = r.WithContext(ctx)
 
 		if isWSUpgrade(r) {
@@ -281,32 +286,24 @@ func main() {
 		proxy.ServeHTTP(w, r)
 	})
 
-	server := &http.Server{
-		Addr:    listenAddr,
-		Handler: handler,
-	}
+	go func() {
+		if token != "" {
+			log.Printf("🚀 CDP Proxy (HTTP): http://*:9222/%s/ → %s", token, upstreamAddr)
+		} else {
+			log.Printf("🚀 CDP Proxy (HTTP): http://*:9222/ → %s (no token)", upstreamAddr)
+		}
+		if err := http.ListenAndServe("0.0.0.0:9222", handler); err != nil {
+			log.Fatalf("HTTP Server error: %v", err)
+		}
+	}()
 
 	if token != "" {
-		if disableHTTPS {
-			log.Printf("🚀 CDP Proxy: http://*:9222/%s/ → %s", token, upstreamAddr)
-		} else {
-			log.Printf("🚀 CDP TLS Proxy: https://*:9222/%s/ → %s", token, upstreamAddr)
-		}
+		log.Printf("🚀 CDP TLS Proxy (HTTPS): https://*:9223/%s/ → %s", token, upstreamAddr)
 	} else {
-		if disableHTTPS {
-			log.Printf("🚀 CDP Proxy: http://*:9222/ → %s (no token)", upstreamAddr)
-		} else {
-			log.Printf("🚀 CDP TLS Proxy: https://*:9222/ → %s (no token)", upstreamAddr)
-		}
+		log.Printf("🚀 CDP TLS Proxy (HTTPS): https://*:9223/ → %s (no token)", upstreamAddr)
 	}
 
-	if disableHTTPS {
-		if err := server.ListenAndServe(); err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
-			log.Fatal(err)
-		}
+	if err := http.ListenAndServeTLS("0.0.0.0:9223", certFile, keyFile, handler); err != nil {
+		log.Fatal(err)
 	}
 }

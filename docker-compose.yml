@@ -4,7 +4,7 @@ services:
     container_name: webtop-cdp
     ports:
       - "${WEBTOP_PORT:-3001}:${WEBTOP_CONTAINER_PORT:-3001}" # Web 桌面端口 (3000为纯HTTP, 3001为HTTPS)
-      - "${WEBTOP_CDP_PORT:-9227}:9222"                        # CDP 控制端口 (HTTPS/WSS)
+      - "${WEBTOP_CDP_PORT:-9227}:${WEBTOP_CDP_CONTAINER_PORT:-9223}" # CDP 控制端口 (9222为纯HTTP, 9223为HTTPS)
     environment:
       - PUID=1000
       - PGID=1000
@@ -12,7 +12,6 @@ services:
       - CUSTOM_USER=${WEBTOP_USER:-}                           # Web 桌面用户名，空则无认证
       - PASSWORD=${WEBTOP_PASSWORD:-}                           # Web 桌面密码，空则无认证
       - CDP_TOKEN=${WEBTOP_CDP_TOKEN:-}                        # CDP 认证 Token（路径前缀）
-      - CDP_DISABLE_HTTPS=${WEBTOP_CDP_DISABLE_HTTPS:-false}   # 是否禁用 CDP TLS 加密 (默认 false)
       - CDP_TLS_CERT=${WEBTOP_CDP_TLS_CERT:-/config/ssl/cdp-cert.pem}
       - CDP_TLS_KEY=${WEBTOP_CDP_TLS_KEY:-/config/ssl/cdp-key.pem}
       # --- Selkies 画质 & 性能 ---
