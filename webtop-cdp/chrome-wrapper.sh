@@ -53,6 +53,7 @@ while true; do
         --renderer-process-limit=2 \
         --js-flags="--max-old-space-size=512" \
         --disk-cache-size=33554432 \
+        --disk-cache-dir=/tmp/chromium-cache \
         --disable-breakpad \
         --disable-async-dns \
         --disable-features=AsyncDns \
